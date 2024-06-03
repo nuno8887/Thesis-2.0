@@ -68,7 +68,7 @@ def get_main_verb(sentence):
 
 def get_direct_objects(sentence):
     direct_objects = [token.text for token in sentence if token.dep_ == "dobj"]
-    return direct_objects
+    return direct_objects[0]
 
 def get_prepositional_objects_and_numbers(sentence):
     prepositional_objects = []
