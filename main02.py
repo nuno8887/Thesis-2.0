@@ -29,9 +29,8 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
 
     return doc
 
-# Example usage
-with open("data/rules.txt", "r") as f:
-    text = f.read()
+# Example text
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches during 5 tournaments."
 
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
@@ -49,14 +48,17 @@ new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
 
 def get_subject(sentence):
     subjects = []
+    subject_details = {}
     for token in sentence:
         if token.dep_ in ("nsubj", "nsubjpass"):
             subject_parts = [child.text for child in token.lefts if child.dep_ == "compound"]
             subject_parts.append(token.text)
-            subjects.append(" ".join(subject_parts))
+            subject_text = " ".join(subject_parts)
+            subjects.append(subject_text)
+            subject_details[subject_text] = {"token": token, "children": token.children}
     if subjects:
-        return subjects[0]
-    return None
+        return subjects[0], subject_details[subjects[0]]
+    return None, None
 
 def get_main_verb(sentence):
     for token in sentence:
@@ -66,26 +68,44 @@ def get_main_verb(sentence):
 
 def get_direct_objects(sentence):
     direct_objects = [token.text for token in sentence if token.dep_ == "dobj"]
-    if direct_objects:
-        return direct_objects[0]
-    return None
+    return direct_objects
 
-def get_prepositional_objects(sentence):
-    prepositional_objects = [token.text for token in sentence if token.dep_ == "pobj"]
-    if prepositional_objects:
-        return prepositional_objects[0]
-    return None
-
-def get_numbers(sentence):
-    numbers = [token.text for token in sentence if token.like_num]
-    if numbers:
-        return numbers
-    return None
+def get_prepositional_objects_and_numbers(sentence):
+    prepositional_objects = []
+    pobj_numbers = {}
+    for token in sentence:
+        if token.dep_ == "pobj" and not token.like_num:
+            print(f"Found prepositional object: {token.text}")
+            prepositional_objects.append(token.text)
+            if token.text not in pobj_numbers:
+                pobj_numbers[token.text] = []
+            # Collect numbers associated with this prepositional object
+            for child in token.children:
+                print(f"Child of {token.text}: {child.text} ({child.dep_})")
+                if child.dep_ == "nummod":
+                    pobj_numbers[token.text].append(child.text)
+                    print(f"  -> Added number: {child.text}")
+                    # Handle conjunctions directly related to the number
+                    for conj in child.conjuncts:
+                        if conj.dep_ == "conj" and conj.like_num:
+                            pobj_numbers[token.text].append(conj.text)
+                            print(f"    -> Added conjunct number: {conj.text}")
+                elif child.dep_ == "conj" and child.dep_ == "pobj":
+                    for conj_child in child.children:
+                        if conj_child.dep_ == "nummod":
+                            pobj_numbers[token.text].append(conj_child.text)
+                            print(f"  -> Added number: {conj_child.text}")
+                            for conj in conj_child.conjuncts:
+                                if conj.dep_ == "conj" and conj.like_num:
+                                    pobj_numbers[token.text].append(conj.text)
+                                    print(f"    -> Added conjunct number: {conj.text}")
+    print(f"Final prepositional objects: {prepositional_objects}")
+    print(f"Final prepositional object numbers: {pobj_numbers}")
+    return prepositional_objects, pobj_numbers
 
 def get_numbers_linked_to_subject_or_object(sentence):
     subject_numbers = []
     dobj_numbers = []
-    pobj_numbers = []
     for token in sentence:
         if token.like_num:
             head = token.head
@@ -95,33 +115,37 @@ def get_numbers_linked_to_subject_or_object(sentence):
                 subject_numbers.append(token.text)
             elif head.dep_ == "dobj":
                 dobj_numbers.append(token.text)
-            elif head.dep_ == "pobj":
-                pobj_numbers.append(token.text)
-    return subject_numbers, dobj_numbers, pobj_numbers
+    return subject_numbers, dobj_numbers
+
+def get_related_info(subject_token):
+    related_info = []
+    for child in subject_token.children:
+        if child.dep_ == "prep":
+            for pobj in child.children:
+                if pobj.dep_ == "pobj":
+                    related_info.append((child.text, pobj.text))
+    return related_info
 
 for sentence in new_doc.sents:
-    subject = get_subject(sentence)
+    subject, subject_details = get_subject(sentence)
     verb = get_main_verb(sentence)
-    direct_object = get_direct_objects(sentence)
-    prepositional_object = get_prepositional_objects(sentence)
-    subject_numbers, dobj_numbers, pobj_numbers = get_numbers_linked_to_subject_or_object(sentence)
+    direct_objects = get_direct_objects(sentence)
+    prepositional_objects, pobj_numbers = get_prepositional_objects_and_numbers(sentence)
+    subject_numbers, dobj_numbers = get_numbers_linked_to_subject_or_object(sentence)
+    
+    related_info = get_related_info(subject_details["token"]) if subject_details else []
 
     print()
     print("---------------------------------------------------------------")
     print(f"Sentence: {sentence}")
     print(f"Subject: {subject}")
     print(f"Verb: {verb}")
-    print(f"Direct Object: {direct_object}")
-    print(f"Prepositional Object: {prepositional_object}")
+    print(f"Direct Objects: {direct_objects}")
+    print(f"Prepositional Objects: {prepositional_objects}")
     print(f"Subject Numbers: {subject_numbers}")
     print(f"Direct Object Numbers: {dobj_numbers}")
     print(f"Prepositional Object Numbers: {pobj_numbers}")
+    print(f"Related Info: {related_info}")
     print("---------------------------------------------------------------")
 
-    for token in sentence:
-        print(f"{token.text}: {token.tag_}, {token.pos_}, {token.dep_}, {token.head.text}")
-
-    # Verify the modifications
-    for token in new_doc:
-        if token.text in custom_pos_tags:
-            print(f"Modified POS tag for '{token.text}': {token.tag_}, UD POS tag: {token.pos_}")
+   
