@@ -4,6 +4,19 @@ from spacy.tokens import Doc
 # Load the spaCy model
 nlp = spacy.load("en_core_web_lg")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 def create_doc_with_custom_pos(text, custom_pos_tags):
     # Tokenize the text to get words and spaces
     tokens = nlp(text)
@@ -95,12 +108,21 @@ def get_prepositional_objects(sentence):
         return prepositional_objects[0]
     return None
 
+def get_numbers(sentence):
+    numbers = [token.text for token in sentence if token.like_num]
+    if numbers:
+        return numbers
+    return None
+
+
+
 for sentence in new_doc.sents:
 
     subject = get_subject(sentence)
     verb = get_main_verb(sentence)
     direct_object = get_direct_objects(sentence)
     prepositional_object = get_prepositional_objects(sentence)
+    numbers = get_numbers(sentence)
     print()
     print("---------------------------------------------------------------")
     print(f"Sentence: {sentence}")
@@ -108,6 +130,7 @@ for sentence in new_doc.sents:
     print(f"Verb: {verb}")
     print(f"direct_object: {direct_object}")
     print(f"prepositional_object: {prepositional_object}")
+    print(f"Numbers: {numbers}")
     print("---------------------------------------------------------------")
 
     for token in new_doc:
