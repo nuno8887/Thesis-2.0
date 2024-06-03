@@ -80,7 +80,7 @@ def get_prepositional_objects_and_numbers(sentence):
             prepositional_objects.append(token.text)
             if token.text not in pobj_numbers:
                 pobj_numbers[token.text] = []
-                child_numbers[token.text] = {}
+                child_numbers[token.text] = []
             
             # Collect numbers associated with this prepositional object
             for child in token.children:
@@ -90,19 +90,17 @@ def get_prepositional_objects_and_numbers(sentence):
                     children_texts = [c.text for c in child.children if not c.like_num]
                     if children_texts:
                         concatenated_text = " ".join(children_texts)
-                        child_numbers[token.text][child.text] = [concatenated_text]
-                    else:
-                        child_numbers[token.text][child.text] = []
+                        child_numbers[token.text].append(concatenated_text)
                     
                     # Print the children of the child
-                    print(f"Children of {child.text}: {child_numbers[token.text][child.text]}")
+                    print(f"Children of {child.text}: {children_texts}")
                     
                     # Handle conjunctions directly related to the number
                     for conj in child.conjuncts:
                         if conj.dep_ == "conj" and conj.like_num:
                             pobj_numbers[token.text].append(conj.text)
                             # Exclude adding conjunction numbers to children
-                            
+    
     return prepositional_objects, pobj_numbers, child_numbers
 
 def get_numbers_linked_to_subject_or_object(sentence):
@@ -120,13 +118,16 @@ def get_numbers_linked_to_subject_or_object(sentence):
     return subject_numbers, dobj_numbers
 
 def get_related_info(sentence):
-    related_info = []
+    related_info = {}
     for token in sentence:
         if token.dep_ == "prep":
             for pobj in token.children:
                 if pobj.dep_ == "pobj":
-                    related_info.append((token.head.text, token.text, pobj.text))
+                    if token.head.text not in related_info:
+                        related_info[token.head.text] = []
+                    related_info[token.head.text].append(pobj.text)
     return related_info
+
 
 for sentence in new_doc.sents:
     subject, subject_details = get_subject(sentence)
