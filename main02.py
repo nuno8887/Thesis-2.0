@@ -84,7 +84,8 @@ def get_numbers(sentence):
 
 def get_numbers_linked_to_subject_or_object(sentence):
     subject_numbers = []
-    object_numbers = []
+    dobj_numbers = []
+    pobj_numbers = []
     for token in sentence:
         if token.like_num:
             head = token.head
@@ -92,16 +93,18 @@ def get_numbers_linked_to_subject_or_object(sentence):
                 head = head.head
             if head.dep_ in ("nsubj", "nsubjpass"):
                 subject_numbers.append(token.text)
-            elif head.dep_ in ("dobj", "pobj"):
-                object_numbers.append(token.text)
-    return subject_numbers, object_numbers
+            elif head.dep_ == "dobj":
+                dobj_numbers.append(token.text)
+            elif head.dep_ == "pobj":
+                pobj_numbers.append(token.text)
+    return subject_numbers, dobj_numbers, pobj_numbers
 
 for sentence in new_doc.sents:
     subject = get_subject(sentence)
     verb = get_main_verb(sentence)
     direct_object = get_direct_objects(sentence)
     prepositional_object = get_prepositional_objects(sentence)
-    subject_numbers, object_numbers = get_numbers_linked_to_subject_or_object(sentence)
+    subject_numbers, dobj_numbers, pobj_numbers = get_numbers_linked_to_subject_or_object(sentence)
 
     print()
     print("---------------------------------------------------------------")
@@ -111,7 +114,8 @@ for sentence in new_doc.sents:
     print(f"Direct Object: {direct_object}")
     print(f"Prepositional Object: {prepositional_object}")
     print(f"Subject Numbers: {subject_numbers}")
-    print(f"Object Numbers: {object_numbers}")
+    print(f"Direct Object Numbers: {dobj_numbers}")
+    print(f"Prepositional Object Numbers: {pobj_numbers}")
     print("---------------------------------------------------------------")
 
     for token in sentence:
