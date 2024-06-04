@@ -30,7 +30,7 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
     return doc
 
 # Example text  The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
-text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches."
+text = "The group of fewer than 3 or 4 teams scored 10 and 12 points in 2 and 3 or 5 matches during lower than 5 or 4 tournaments."
 
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
