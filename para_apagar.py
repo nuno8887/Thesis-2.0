@@ -30,7 +30,7 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
     return doc
 
 # Example text  The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
-text = "The group of fewer than 3 or 4 teams scored 10 and 12 points in 2 and 3 or 5 matches during lower than 5 or 4 tournaments."
+text = "The group of fewer than 3 or 4 teams scored 10 and 12 points in 2 and 3 or 5 matches during equal or more than 5 tournaments."
 
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
@@ -84,6 +84,7 @@ def get_prepositional_objects_and_numbers(sentence):
             
             # Collect numbers associated with this prepositional object
             for child in token.children:
+                #add for amod for the cases of "equal or more than"--------------------------------- para fazer
                 if child.dep_ == "nummod":
                     pobj_numbers[token.text].append(child.text)
                     # Collect children of the child, excluding numbers
