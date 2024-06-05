@@ -52,7 +52,7 @@ custom_pos_tags = {
 # The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
 # The group has a size of more or equal than 200 words.
 # The group as 5 tournaments.
-text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal to 5 tournaments."
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
@@ -192,9 +192,7 @@ def get_related_info_pobj(sentence):
     related_info = {}
     for token in sentence:
         if token.dep_ == "prep":
-            # Start with the preposition
-            prep_phrase = [token.text] 
-            # Iterate backwards to capture the whole phrase
+            prep_phrase = [token.text]
             current_token = token
             while current_token.i > 0:
                 previous_token = sentence[current_token.i - 1]
@@ -202,8 +200,12 @@ def get_related_info_pobj(sentence):
                     prep_phrase.insert(0, previous_token.text)
                     current_token = previous_token
                 else:
-                    break  # Stop when we reach a non-phrase word
+                    break  
             prep_phrase = " ".join(prep_phrase)
+
+            # Filter out 'of' and 'in' without additional words
+            if prep_phrase in ("of", "in"):
+                continue  
 
             objects = []
             for child in token.children:
@@ -217,6 +219,7 @@ def get_related_info_pobj(sentence):
 
 
 
+
 def get_related_info_dobj(sentence):
     related_info = {}
     for token in sentence:
@@ -224,6 +227,17 @@ def get_related_info_dobj(sentence):
             if token.head.text not in related_info:
                 related_info[token.head.text] = []
             related_info[token.head.text].append(token.text)
+    return related_info
+
+def get_related_info_pobj_connections(sentence):
+    related_info = {}
+    for token in sentence:
+        if token.dep_ == "prep":
+            for pobj in token.children:
+                if pobj.dep_ == "pobj":
+                    if token.head.text not in related_info:
+                        related_info[token.head.text] = []
+                    related_info[token.head.text].append(pobj.text)
     return related_info
 
 
@@ -236,6 +250,8 @@ for sentence in new_doc.sents:
     
     related_info_pobj = get_related_info_pobj(sentence)
     related_info_dobj = get_related_info_dobj(sentence)
+
+    related_info_pobj_connections = get_related_info_pobj_connections(sentence)
 
     print()
     print("---------------------------------------------------------------")
@@ -254,6 +270,8 @@ for sentence in new_doc.sents:
     print(f"Prepositional Object Numbers: {pobj_numbers}")
     print(f"Preposisitional Numerical Modifiers: {child_numbers}")
     print(f"Related Info for the Prepositions: {related_info_pobj}")
+    print()
+    print(f"Related Info for the Prepositions Connections: {related_info_pobj_connections}")
     print("---------------------------------------------------------------")
 
     for token in sentence:
