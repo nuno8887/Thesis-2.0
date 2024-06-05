@@ -9,7 +9,7 @@ nlp = spacy.load("en_core_web_lg")
 def create_doc_with_custom_pos(text, custom_pos_tags):
 
     # Replace "more or equal than" with "no less than" (case-insensitive)
-    text = re.sub(r"more or equal than", "no less than", text, flags=re.IGNORECASE)
+    #text = re.sub(r"more or equal than", "no less than", text, flags=re.IGNORECASE)
     # Tokenize the text to get words and spaces
     tokens = nlp(text)
     words = [token.text for token in tokens]
@@ -49,8 +49,10 @@ custom_pos_tags = {
     "QQWA": ("VB", "VERB"),
 }
 
-# Example text  The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
-text = "The group has a size of more or equal than 200 words."
+# The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
+# The group has a size of more or equal than 200 words.
+# The group as 5 tournaments.
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal to 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
@@ -59,8 +61,13 @@ def get_subject(sentence):
     subjects = []
     subject_details = {}
     for token in sentence:
-        if token.dep_ in ("nsubj", "nsubjpass"):
-            subject_parts = [child.text for child in token.lefts if child.dep_ == "compound"]
+        # Check for nsubj, nsubjpass, or if the token is a noun and the root
+        if token.dep_ in ("nsubj", "nsubjpass") or (
+            token.pos_ == "NOUN" and token.dep_ == "ROOT"
+        ):
+            subject_parts = [
+                child.text for child in token.lefts if child.dep_ == "compound"
+            ]
             subject_parts.append(token.text)
             subject_text = " ".join(subject_parts)
             subjects.append(subject_text)
@@ -68,6 +75,8 @@ def get_subject(sentence):
     if subjects:
         return subjects[0], subject_details[subjects[0]]
     return None, None
+
+
 
 def get_main_verb(sentence):
     root_token = None  # Store the root token
@@ -183,12 +192,30 @@ def get_related_info_pobj(sentence):
     related_info = {}
     for token in sentence:
         if token.dep_ == "prep":
-            for pobj in token.children:
-                if pobj.dep_ == "pobj":
-                    if token.head.text not in related_info:
-                        related_info[token.head.text] = []
-                    related_info[token.head.text].append(pobj.text)
+            # Start with the preposition
+            prep_phrase = [token.text] 
+            # Iterate backwards to capture the whole phrase
+            current_token = token
+            while current_token.i > 0:
+                previous_token = sentence[current_token.i - 1]
+                if previous_token.pos_ in ("ADJ", "ADV", "CCONJ"):
+                    prep_phrase.insert(0, previous_token.text)
+                    current_token = previous_token
+                else:
+                    break  # Stop when we reach a non-phrase word
+            prep_phrase = " ".join(prep_phrase)
+
+            objects = []
+            for child in token.children:
+                if child.dep_ == "pobj":
+                    objects.append(child.text)
+
+            if objects:
+                related_info[prep_phrase] = objects
+
     return related_info
+
+
 
 def get_related_info_dobj(sentence):
     related_info = {}
