@@ -21,9 +21,12 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
     # Assign custom POS tags
     for token in doc:
         if token.text in custom_pos_tags:
-            detailed_tag, universal_tag = custom_pos_tags[token.text]
+            detailed_tag, universal_tag, dependency= custom_pos_tags[token.text]
             token.tag_ = detailed_tag
             token.pos_ = universal_tag
+            token.dep_ = dependency
+
+
             # Check if "is" is the head of a dependency and if so, change to AUX
             if token.text == "is" and any(child.dep_ != "ROOT" for child in token.children):
                 token.pos_ = "AUX"
@@ -42,17 +45,17 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
 
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
-    "jogar": ("VB", "VERB"),
-    "AAS": ("VB", "VERB"),
-    "LOL": ("VB", "VERB"), 
-    "QQW": ("VB", "VERB"),
-    "QQWA": ("VB", "VERB"),
+    "jogar": ("VB", "VERB","ROOT"),
+    "ass": ("VB", "VERB","ROOT"),
+    "lol": ("VB", "VERB","ROOT"), 
+    "qqwo": ("VB", "VERB","ROOT"),
+    "qqwa": ("VB", "VERB","ROOT"),
 }
 
 # The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
 # The group has a size of more or equal than 200 words.
 # The group as 5 tournaments.
-text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments."
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal or bigger than 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
@@ -96,8 +99,15 @@ def get_main_verb(sentence):
     return None
 
 def get_direct_objects(sentence):
-    direct_objects = [token.text for token in sentence if token.dep_ == "dobj"]
+    direct_objects = []
+    for token in sentence:
+        print("Him Here!!!!!!")
+        if token.dep_ in ("dobj", "npadvmod"):
+            direct_objects.append(token.text)
+            print(f"Found direct object or npadvmod: {token.text} (dep_={token.dep_})----------------------------------------------------------------------")  # Print statement added here
     return direct_objects
+
+
 
 
 # for pobj--------------------------------------------------------------------------------------
@@ -145,7 +155,7 @@ def get_direct_objects_and_numbers(sentence):
     child_numbers = {}
     
     for token in sentence:
-        if token.dep_ == "dobj" and not token.like_num:
+        if token.dep_ in ("dobj", "npadvmod") and not token.like_num:
             prepositional_objects.append(token.text)
             if token.text not in pobj_numbers:
                 pobj_numbers[token.text] = []

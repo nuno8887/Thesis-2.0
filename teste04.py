@@ -52,7 +52,7 @@ custom_pos_tags = {
 # The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
 # The group has a size of more or equal than 200 words.
 # The group as 5 tournaments.
-text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal to 5 tournaments."
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal or bigger to 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)

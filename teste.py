@@ -1,10 +1,15 @@
 import spacy
 from spacy.tokens import Doc
+import re
+
 
 # Load the spaCy model
 nlp = spacy.load("en_core_web_lg")
 
 def create_doc_with_custom_pos(text, custom_pos_tags):
+
+    # Replace "more or equal than" with "no less than" (case-insensitive)
+    #text = re.sub(r"more or equal than", "no less than", text, flags=re.IGNORECASE)
     # Tokenize the text to get words and spaces
     tokens = nlp(text)
     words = [token.text for token in tokens]
@@ -19,6 +24,12 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
             detailed_tag, universal_tag = custom_pos_tags[token.text]
             token.tag_ = detailed_tag
             token.pos_ = universal_tag
+            # Check if "is" is the head of a dependency and if so, change to AUX
+            if token.text == "is" and any(child.dep_ != "ROOT" for child in token.children):
+                token.pos_ = "AUX"
+            
+
+        
 
     # Re-parse the doc with the dependency parser
     for pipe in nlp.pipe_names:
@@ -29,9 +40,6 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
 
     return doc
 
-# Example text
-text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches during 5 tournaments."
-
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
     "jogar": ("VB", "VERB"),
@@ -39,9 +47,12 @@ custom_pos_tags = {
     "LOL": ("VB", "VERB"), 
     "QQW": ("VB", "VERB"),
     "QQWA": ("VB", "VERB"),
-    "EQQWA": ("VB", "VERB"),
-    "EIA": ("VB", "VERB"),
 }
+
+# The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
+# The group has a size of more or equal than 200 words.
+# The group as 5 tournaments.
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal or bigger to 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
@@ -50,8 +61,13 @@ def get_subject(sentence):
     subjects = []
     subject_details = {}
     for token in sentence:
-        if token.dep_ in ("nsubj", "nsubjpass"):
-            subject_parts = [child.text for child in token.lefts if child.dep_ == "compound"]
+        # Check for nsubj, nsubjpass, or if the token is a noun and the root
+        if token.dep_ in ("nsubj", "nsubjpass") or (
+            token.pos_ == "NOUN" and token.dep_ == "ROOT"
+        ):
+            subject_parts = [
+                child.text for child in token.lefts if child.dep_ == "compound"
+            ]
             subject_parts.append(token.text)
             subject_text = " ".join(subject_parts)
             subjects.append(subject_text)
@@ -60,34 +76,104 @@ def get_subject(sentence):
         return subjects[0], subject_details[subjects[0]]
     return None, None
 
+
+
 def get_main_verb(sentence):
+    root_token = None  # Store the root token
     for token in sentence:
         if token.dep_ == "ROOT":
+            root_token = token  # Found the root, but might be AUX
+
+    # Check if the root is an auxiliary verb
+    if root_token and root_token.pos_ == "VERB" and root_token.tag_ != "VBZ":  
+        return root_token.text
+
+    # If the root was AUX, search for a different main verb
+    for token in sentence:
+        if token.pos_ == "VERB" and token.dep_ != "aux":
             return token.text
+
     return None
 
 def get_direct_objects(sentence):
     direct_objects = [token.text for token in sentence if token.dep_ == "dobj"]
     return direct_objects
 
+
+# for pobj--------------------------------------------------------------------------------------
 def get_prepositional_objects_and_numbers(sentence):
     prepositional_objects = []
     pobj_numbers = {}
+    child_numbers = {}
+    
     for token in sentence:
         if token.dep_ == "pobj" and not token.like_num:
             prepositional_objects.append(token.text)
             if token.text not in pobj_numbers:
                 pobj_numbers[token.text] = []
+                child_numbers[token.text] = []
+            
             # Collect numbers associated with this prepositional object
             for child in token.children:
+
                 if child.dep_ == "nummod":
                     pobj_numbers[token.text].append(child.text)
+                    # Collect children of the child, excluding numbers
+                    children_texts = [c.text for c in child.children if not c.like_num]
+                    if children_texts:
+                        concatenated_text = " ".join(children_texts)
+                        child_numbers[token.text].append(concatenated_text)
+                    
+                    # Print the children of the child
+                    print(f"Children of {child.text}: {children_texts}")
+                    
                     # Handle conjunctions directly related to the number
                     for conj in child.conjuncts:
                         if conj.dep_ == "conj" and conj.like_num:
                             pobj_numbers[token.text].append(conj.text)
-    return prepositional_objects, pobj_numbers
+                            # Exclude adding conjunction numbers to children
+    
+    return prepositional_objects, pobj_numbers, child_numbers
 
+#--------------------------------------------------------------------------------------------------------
+
+# for doj -----------------------------------------------------------------------------------------------
+
+def get_direct_objects_and_numbers(sentence):
+    prepositional_objects = []
+    pobj_numbers = {}
+    child_numbers = {}
+    
+    for token in sentence:
+        if token.dep_ == "dobj" and not token.like_num:
+            prepositional_objects.append(token.text)
+            if token.text not in pobj_numbers:
+                pobj_numbers[token.text] = []
+                child_numbers[token.text] = []
+            
+            # Collect numbers associated with this prepositional object
+            for child in token.children:
+
+                if child.dep_ == "nummod":
+                    pobj_numbers[token.text].append(child.text)
+                    # Collect children of the child, excluding numbers
+                    children_texts = [c.text for c in child.children if not c.like_num]
+                    if children_texts:
+                        concatenated_text = " ".join(children_texts)
+                        child_numbers[token.text].append(concatenated_text)
+                    
+                    # Print the children of the child
+                    print(f"Children of {child.text}: {children_texts}")
+                    
+                    # Handle conjunctions directly related to the number
+                    for conj in child.conjuncts:
+                        if conj.dep_ == "conj" and conj.like_num:
+                            pobj_numbers[token.text].append(conj.text)
+                            # Exclude adding conjunction numbers to children
+    
+    return prepositional_objects, pobj_numbers, child_numbers
+
+#--------------------------------------------------------------------------------------------------------
 def get_numbers_linked_to_subject_or_object(sentence):
     subject_numbers = []
     dobj_numbers = []
@@ -102,35 +188,72 @@ def get_numbers_linked_to_subject_or_object(sentence):
                 dobj_numbers.append(token.text)
     return subject_numbers, dobj_numbers
 
-def get_related_info(sentence):
-    related_info = []
+def get_related_info_pobj(sentence):
+    related_info = {}
     for token in sentence:
         if token.dep_ == "prep":
-            for pobj in token.children:
-                if pobj.dep_ == "pobj":
-                    related_info.append((token.head.text, token.text, pobj.text))
+            # Start with the preposition
+            prep_phrase = [token.text] 
+            # Iterate backwards to capture the whole phrase
+            current_token = token
+            while current_token.i > 0:
+                previous_token = sentence[current_token.i - 1]
+                if previous_token.pos_ in ("ADJ", "ADV", "CCONJ"):
+                    prep_phrase.insert(0, previous_token.text)
+                    current_token = previous_token
+                else:
+                    break  # Stop when we reach a non-phrase word
+            prep_phrase = " ".join(prep_phrase)
+
+            objects = []
+            for child in token.children:
+                if child.dep_ == "pobj":
+                    objects.append(child.text)
+
+            if objects:
+                related_info[prep_phrase] = objects
+
     return related_info
+
+
+
+def get_related_info_dobj(sentence):
+    related_info = {}
+    for token in sentence:
+        if token.dep_ == "dobj":
+            if token.head.text not in related_info:
+                related_info[token.head.text] = []
+            related_info[token.head.text].append(token.text)
+    return related_info
+
 
 for sentence in new_doc.sents:
     subject, subject_details = get_subject(sentence)
     verb = get_main_verb(sentence)
-    direct_objects = get_direct_objects(sentence)
-    prepositional_objects, pobj_numbers = get_prepositional_objects_and_numbers(sentence)
+    direct_objects, dobj_numbers, dobj_child_numbers = get_direct_objects_and_numbers(sentence)
+    prepositional_objects, pobj_numbers, child_numbers = get_prepositional_objects_and_numbers(sentence)
     subject_numbers, dobj_numbers = get_numbers_linked_to_subject_or_object(sentence)
     
-    related_info = get_related_info(sentence)
+    related_info_pobj = get_related_info_pobj(sentence)
+    related_info_dobj = get_related_info_dobj(sentence)
 
     print()
     print("---------------------------------------------------------------")
     print(f"Sentence: {sentence}")
     print(f"Subject: {subject}")
-    print(f"Verb: {verb}")
-    print(f"Direct Objects: {direct_objects}")
-    print(f"Prepositional Objects: {prepositional_objects}")
     print(f"Subject Numbers: {subject_numbers}")
+    print()
+    print(f"Verb: {verb}")
+    print()
+    print(f"Direct Objects: {direct_objects}")
     print(f"Direct Object Numbers: {dobj_numbers}")
+    print(f"Direct Object Numerical Modifiers: {dobj_child_numbers}")
+    print(f"Related Info for the Direct Object: {related_info_dobj}")
+    print()
+    print(f"Prepositional Objects: {prepositional_objects}")
     print(f"Prepositional Object Numbers: {pobj_numbers}")
-    print(f"Related Info: {related_info}")
+    print(f"Preposisitional Numerical Modifiers: {child_numbers}")
+    print(f"Related Info for the Prepositions: {related_info_pobj}")
     print("---------------------------------------------------------------")
 
     for token in sentence:
