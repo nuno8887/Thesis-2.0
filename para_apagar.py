@@ -19,6 +19,10 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
             detailed_tag, universal_tag = custom_pos_tags[token.text]
             token.tag_ = detailed_tag
             token.pos_ = universal_tag
+            # Check if "is" is the head of a dependency and if so, change to AUX
+            if token.text == "is" and any(child.dep_ != "ROOT" for child in token.children):
+                token.pos_ = "AUX"
+        
 
     # Re-parse the doc with the dependency parser
     for pipe in nlp.pipe_names:
@@ -36,11 +40,10 @@ custom_pos_tags = {
     "LOL": ("VB", "VERB"), 
     "QQW": ("VB", "VERB"),
     "QQWA": ("VB", "VERB"),
-    "is": ("VB", "VERB"),
 }
 
 # Example text  The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
-text = "The GROUP FFFD of 3 teams scored 10 and 12 points in 2 and 3 matches are equal to 5 tournaments."
+text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches during is equal to 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
@@ -177,21 +180,24 @@ for sentence in new_doc.sents:
     prepositional_objects, pobj_numbers, child_numbers = get_prepositional_objects_and_numbers(sentence)
     subject_numbers, dobj_numbers = get_numbers_linked_to_subject_or_object(sentence)
     
-    related_info = get_related_info(sentence)
+    related_info_pobj = get_related_info(sentence)
 
     print()
     print("---------------------------------------------------------------")
     print(f"Sentence: {sentence}")
     print(f"Subject: {subject}")
     print(f"Subject Numbers: {subject_numbers}")
+    print()
     print(f"Verb: {verb}")
+    print()
     print(f"Direct Objects: {direct_objects}")
     print(f"Direct Object Numbers: {dobj_numbers}")
     print(f"Direct Object Numerical Modifiers: {dobj_child_numbers}")
+    print()
     print(f"Prepositional Objects: {prepositional_objects}")
     print(f"Prepositional Object Numbers: {pobj_numbers}")
     print(f"Preposisitional Numerical Modifiers: {child_numbers}")
-    print(f"Related Info: {related_info}")
+    print(f"Related Info: {related_info_pobj}")
     print("---------------------------------------------------------------")
 
     for token in sentence:
