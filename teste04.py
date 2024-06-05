@@ -21,9 +21,10 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
     # Assign custom POS tags
     for token in doc:
         if token.text in custom_pos_tags:
-            detailed_tag, universal_tag = custom_pos_tags[token.text]
+            detailed_tag, universal_tag, dependency = custom_pos_tags[token.text]
             token.tag_ = detailed_tag
             token.pos_ = universal_tag
+            token.dep_ = dependency
             # Check if "is" is the head of a dependency and if so, change to AUX
             if token.text == "is" and any(child.dep_ != "ROOT" for child in token.children):
                 token.pos_ = "AUX"
@@ -42,17 +43,24 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
 
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
-    "jogar": ("VB", "VERB"),
-    "AAS": ("VB", "VERB"),
-    "LOL": ("VB", "VERB"), 
-    "QQW": ("VB", "VERB"),
-    "QQWA": ("VB", "VERB"),
+    "jogar": ("VB", "VERB","ROOT"),
+    "AAS": ("VB", "VERB","ROOT"),
+    "LOL": ("VB", "VERB","ROOT"), 
+    "TCURSO": ("VB", "VERB","ROOT"),
 }
 
 # The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
 # The group has a size of more or equal than 200 words.
 # The group as 5 tournaments.
-text = "The group of 3 teams scored 10 and 12 points in 2 and 3 matches is equal or bigger to 5 tournaments."
+
+# The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20.
+# The CampoInteiroA of TTabelaRegistos must be smaller or equal to 20.
+# Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos.
+# Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA is bigger than 10.
+# Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
+#
+#
+text = ""
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
