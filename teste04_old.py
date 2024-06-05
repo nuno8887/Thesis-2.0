@@ -60,7 +60,7 @@ custom_pos_tags = {
 # Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
 #
 #
-text = "Each TTabelaRegistos must have no more than 2 and 3 TTabelaSubRegistos, if CampoInteiroA of TTabelaRegistos is bigger than 10."
+text = "TTable is equal to 5."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
