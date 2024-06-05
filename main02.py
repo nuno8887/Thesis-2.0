@@ -40,7 +40,7 @@ def split_sentence_spans(doc):
         if token.ent_type_ == "IF_CLOUSE":
             clause_spans.append(Span(doc, if_start, token.i))
             if_start = token.i
-        elif token.ent_type_ in ("AND_CLOUSE", "OR_CLOUSE") and if_start != 0:
+        elif token.ent_type_ in ("AND_CLOUSE", "OR_CLOUSE"):
             # Adjust the end index to exclude the conjunction
             clause_spans.append(Span(doc, if_start, token.i)) 
             if_start = token.i  # Move past the conjunction
