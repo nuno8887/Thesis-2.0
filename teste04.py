@@ -29,9 +29,6 @@ def create_doc_with_custom_pos(text, custom_pos_tags):
 
     return doc
 
-# Example text  The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
-text = "The group of fewer than 3 or 4 teams scored 10 and 12 points in 2 and 3 or 5 matches during lower than 5 or 4 tournaments."
-
 # Define the custom POS tags (using 'VB' tag for specific tokens)
 custom_pos_tags = {
     "jogar": ("VB", "VERB"),
@@ -39,9 +36,11 @@ custom_pos_tags = {
     "LOL": ("VB", "VERB"), 
     "QQW": ("VB", "VERB"),
     "QQWA": ("VB", "VERB"),
-    "EQQWA": ("VB", "VERB"),
-    "EIA": ("VB", "VERB"),
+    "is": ("VB", "VERB"),
 }
+
+# Example text  The group of 3 teams scored 10 and 12 points in 2 and 3 matches during more than 5 tournaments.
+text = "The GROUP FFFD of 3 teams scored 10 and 12 points in 2 and 3 matches are equal to 5 tournaments."
 
 # Create a new Doc with custom POS tags and parse the dependencies
 new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
@@ -70,6 +69,8 @@ def get_direct_objects(sentence):
     direct_objects = [token.text for token in sentence if token.dep_ == "dobj"]
     return direct_objects
 
+
+# for pobj--------------------------------------------------------------------------------------
 def get_prepositional_objects_and_numbers(sentence):
     prepositional_objects = []
     pobj_numbers = {}
@@ -84,6 +85,7 @@ def get_prepositional_objects_and_numbers(sentence):
             
             # Collect numbers associated with this prepositional object
             for child in token.children:
+
                 if child.dep_ == "nummod":
                     pobj_numbers[token.text].append(child.text)
                     # Collect children of the child, excluding numbers
@@ -103,6 +105,45 @@ def get_prepositional_objects_and_numbers(sentence):
     
     return prepositional_objects, pobj_numbers, child_numbers
 
+#--------------------------------------------------------------------------------------------------------
+
+# for doj -----------------------------------------------------------------------------------------------
+
+def get_direct_objects_and_numbers(sentence):
+    prepositional_objects = []
+    pobj_numbers = {}
+    child_numbers = {}
+    
+    for token in sentence:
+        if token.dep_ == "dobj" and not token.like_num:
+            prepositional_objects.append(token.text)
+            if token.text not in pobj_numbers:
+                pobj_numbers[token.text] = []
+                child_numbers[token.text] = []
+            
+            # Collect numbers associated with this prepositional object
+            for child in token.children:
+
+                if child.dep_ == "nummod":
+                    pobj_numbers[token.text].append(child.text)
+                    # Collect children of the child, excluding numbers
+                    children_texts = [c.text for c in child.children if not c.like_num]
+                    if children_texts:
+                        concatenated_text = " ".join(children_texts)
+                        child_numbers[token.text].append(concatenated_text)
+                    
+                    # Print the children of the child
+                    print(f"Children of {child.text}: {children_texts}")
+                    
+                    # Handle conjunctions directly related to the number
+                    for conj in child.conjuncts:
+                        if conj.dep_ == "conj" and conj.like_num:
+                            pobj_numbers[token.text].append(conj.text)
+                            # Exclude adding conjunction numbers to children
+    
+    return prepositional_objects, pobj_numbers, child_numbers
+
+#--------------------------------------------------------------------------------------------------------
 def get_numbers_linked_to_subject_or_object(sentence):
     subject_numbers = []
     dobj_numbers = []
@@ -132,7 +173,7 @@ def get_related_info(sentence):
 for sentence in new_doc.sents:
     subject, subject_details = get_subject(sentence)
     verb = get_main_verb(sentence)
-    direct_objects = get_direct_objects(sentence)
+    direct_objects, dobj_numbers, dobj_child_numbers = get_direct_objects_and_numbers(sentence)
     prepositional_objects, pobj_numbers, child_numbers = get_prepositional_objects_and_numbers(sentence)
     subject_numbers, dobj_numbers = get_numbers_linked_to_subject_or_object(sentence)
     
@@ -146,9 +187,10 @@ for sentence in new_doc.sents:
     print(f"Verb: {verb}")
     print(f"Direct Objects: {direct_objects}")
     print(f"Direct Object Numbers: {dobj_numbers}")
+    print(f"Direct Object Numerical Modifiers: {dobj_child_numbers}")
     print(f"Prepositional Objects: {prepositional_objects}")
     print(f"Prepositional Object Numbers: {pobj_numbers}")
-    print(f"Children of Numerical Modifiers: {child_numbers}")
+    print(f"Preposisitional Numerical Modifiers: {child_numbers}")
     print(f"Related Info: {related_info}")
     print("---------------------------------------------------------------")
 
