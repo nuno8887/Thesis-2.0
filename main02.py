@@ -28,7 +28,7 @@ patterns = [
 ruler.add_patterns(patterns)
 
 
-doc = nlp("Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10 and TTable is equal to 5.")
+doc = nlp("Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10 or 12 and TTable is equal to 5.")
 #for ent in doc.ents:
  #   print(ent.text, ent.label_) 
 
