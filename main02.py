@@ -101,5 +101,57 @@ dic_main_CLOUSE = {
             {"NUM": None}
         ]
     },
-    
+    "AND": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
+    "OR": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
 }
+
+dic_if_CLOUSE = {
+    "MAIN": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
+    "AND": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
+    "OR": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
+    "THEN": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
+}
+
+print(dic_main_CLOUSE)
