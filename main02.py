@@ -91,3 +91,15 @@ main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
 
 print("main_CLOUSE:", main_CLOUSE)
 print("if_CLOUSE:", if_CLOUSE)
+
+dic_main_CLOUSE = {
+    "MAIN": {
+        "1": [
+            {"Subject": None},
+            {"Object": None},
+            {"Preposision": None},
+            {"NUM": None}
+        ]
+    },
+    
+}
