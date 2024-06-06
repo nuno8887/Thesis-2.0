@@ -67,9 +67,10 @@ ruler.add_patterns(split_patterns)
 
 
 # Sample text
-# TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.
+# TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5.
 #Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
-doc = nlp("The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20")
+
+#doc = nlp("User_GDAI must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5.")
 
 # Function to split sentence spans based on conjunctions and clauses
 def split_sentence_spans(doc):
@@ -100,7 +101,7 @@ def split_sentence_spans(doc):
     return [span for span in clause_spans if span.text.strip()]
 
 # Split the document into spans
-clause_spans = split_sentence_spans(doc)
+#clause_spans = split_sentence_spans(doc)
 #print (f"clause_spans: {clause_spans}")
 def classify_spans(clause_spans):
     main_CLOUSE = {
@@ -142,7 +143,7 @@ def classify_spans(clause_spans):
     
     return main_CLOUSE, if_CLOUSE
 
-main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
+#main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
 
 #print("main_CLOUSE:", main_CLOUSE)
 #print("if_CLOUSE:", if_CLOUSE)
@@ -294,10 +295,27 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
 
 
 # Call the function
-docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
+#docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
 
 
+def main(phrase):
 
+    doc = nlp(phrase)
+    clause_spans = split_sentence_spans(doc)
+    main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
+    docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
+
+    return docs, dic_main_CLOUSE, dic_if_CLOUSE
+
+# TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5.
+#Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
+#User_GDAI must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5.
+#The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20.
+#The CampoTextoA of TTabelaRegistos must not exceed 200 characters.
+
+phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters."
+
+docs, dic_main_CLOUSE, dic_if_CLOUSE = main(phrase)
 
 # Print the updated dictionaries
 print("dic_main_CLOUSE")
@@ -308,78 +326,5 @@ pprint.pprint(dic_if_CLOUSE)
 
 
 
-
-
-
-dic_main_CLOUSE1 = {
-    "MAIN": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-    "AND": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-    "OR": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-}
-
-dic_if_CLOUSE1 = {
-    "MAIN": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-    "AND": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-    "OR": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-    "THEN": {
-        "1": [
-            {"Subject": None},
-            {"Object": None},
-            {"Preposision": None},
-            {"NUM": None},
-            {"Relations": None}
-        ]
-    },
-}
-
-#print(dic_main_CLOUSE)
 
 

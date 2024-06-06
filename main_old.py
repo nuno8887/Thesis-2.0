@@ -1,142 +1,330 @@
 import spacy
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
+from spacy.pipeline import EntityRuler
+import pprint
 
-# Load the spaCy model
 nlp = spacy.load("en_core_web_lg")
 
+ruler = nlp.add_pipe('entity_ruler', before='ner')
+
+split_patterns = [
+
+    #FIRST PART-------------------------------------------
+    {"label": "IF_CLOUSE", "pattern": [{"LEMMA": "if"}]},
+    {"label": "THEN_CLOUSE", "pattern": [{"LEMMA": "then"}]},
+    {"label": "AND_CLOUSE_NUM", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
+    {"label": "AND_CLOUSE", "pattern": [{"LOWER": "and"}]},
+    {"label": "OR_CLOUSE_NUM", "pattern": [{"LIKE_NUM": True}, {"LOWER": "or"}, {"LIKE_NUM": True}]},
+    {"label": "OR_CLOUSE", "pattern": [{"LOWER": "or"}]},
+    #---------------------------------------------------------
+
+    # Define patterns for "nsubj", "prep", "pobj"
+    {"label": "NOUN_PHRASE","pattern": [{"DEP": "nsubj"},{"DEP": "prep"},{"DEP": "pobj"}]},
+
+    #LESS THAN
+    {"label": "LESS_THAN", "pattern": [{"LOWER": "less"}, {"LOWER": "than"}]},# less than
+    {"label": "LESS_THAN", "pattern": [{"LOWER": "fewer"}, {"LOWER": "than"}]},# fewer than
+    {"label": "LESS_THAN", "pattern": [{"LEMMA": "lower"}, {"LOWER": "than"}]},# lower than
+    {"label": "LESS_THAN", "pattern": [{"LEMMA": "smaller"}, {"LOWER": "than"}]},# smaller than
+
+    #LESS or EQUAL TO
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "no"}, {"LOWER": "more"}, {"LOWER": "than"}]},# no more than
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "more"}, {"LOWER": "than"}]},# not more than
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "less"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # less or equal to
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "at"}, {"LOWER": "most"}]},  # at most
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "up"}, {"LOWER": "to"}]},  # up to
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "exceed"}]},  # not exceed
 
 
 
+    #BIGGER THAN
+    {"label": "BIGGER_THAN", "pattern": [{"LOWER": "bigger"}, {"LOWER": "than"}]}, # bigger than
+    {"label": "BIGGER_THAN", "pattern": [{"LEMMA": "more"}, {"LOWER": "than"}]},# more than
+    {"label": "BIGGER_THAN", "pattern": [{"LOWER": "exceed"}]},  # exceed
 
 
+    #BIGGER or EQUAL TO
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "greater"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # greater or equal to
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "equal"}, {"LOWER": "or"}, {"LOWER": "greater"}, {"LOWER": "than"}]},  # equal or greater than
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "less"}, {"LOWER": "than"}]},  # not less than
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "less"}, {"LOWER": "than"}]},  # no less than
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "at"}, {"LOWER": "least"}]},  # at least
+    
+
+    #EQUAL TO
+    {"label": "EQUAL_TO", "pattern": [{"LOWER": "equal"}]},# equal
+
+    #BETWEEN
+    {"label": "BETWEEN", "pattern": [{"LOWER": "between"}]},# between
+
+    # NUM and/or NUM
+    {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
+    {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "or"}, {"LIKE_NUM": True}]},
+    {"label": "NUM", "pattern": [{"LIKE_NUM": True}]},
+]
+
+ruler.add_patterns(split_patterns)
 
 
+# Sample text
+# TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5.
+#Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
 
+#doc = nlp("User_GDAI must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5.")
 
+# Function to split sentence spans based on conjunctions and clauses
+def split_sentence_spans(doc):
+    if_start = 0
+    clause_spans = []
+    current_clause = None
 
-
-
-
-def create_doc_with_custom_pos(text, custom_pos_tags):
-    # Tokenize the text to get words and spaces
-    tokens = nlp(text)
-    words = [token.text for token in tokens]
-    spaces = [token.whitespace_ for token in tokens]
-
-    # Create a new Doc object
-    doc = Doc(nlp.vocab, words=words, spaces=spaces)
-
-    # Assign custom POS tags
     for token in doc:
-        if token.text in custom_pos_tags:
-            #token.tag_ = custom_pos_tags[token.text]
-            detailed_tag, universal_tag = custom_pos_tags[token.text]
-            token.tag_ = detailed_tag
-            token.pos_ = universal_tag
+        if token.ent_type_ == "IF_CLOUSE":
+            clause_spans.append(Span(doc, if_start, token.i))
+            if_start = token.i
+            current_clause = "IF"
+        elif token.ent_type_ == "THEN_CLOUSE":
+            clause_spans.append(Span(doc, if_start, token.i))
+            if_start = token.i
+            current_clause = "THEN"
+        elif token.ent_type_ in ("AND_CLOUSE", "OR_CLOUSE"):
+            clause_spans.append(Span(doc, if_start, token.i))
+            if_start = token.i
 
-            #token.tag_ = custom_pos_tags[token.text]
-            #token.pos_ = "VERB" if custom_pos_tags[token.text] == "VB" else token.pos_
+    if if_start != 0:
+        clause_spans.append(Span(doc, if_start, len(doc)))
     
-    # Re-parse the doc with the dependency parser
-    for pipe in nlp.pipe_names:
-        if pipe != "parser":
-            nlp.get_pipe(pipe)(doc)
+    # If no spans were added, add the entire doc as a single span
+    if not clause_spans:
+        clause_spans.append(Span(doc, 0, len(doc)))
 
-    nlp.get_pipe("parser")(doc)
+    return [span for span in clause_spans if span.text.strip()]
 
-    return doc
-
-# Example usage
-with open("data/rules.txt", "r") as f:
-    text = f.read()
-
-# Define the custom POS tags (using 'VB' tag for 'AAU')
-custom_pos_tags = {
-    #"AAU": "VB", # Detailed POS tag for 'AAU'
-    #"LOL": "VB" 
-    "jogar": ("VB", "VERB"),
-    "AAS": ("VB", "VERB"),  # Tuple of (detailed POS tag, universal POS tag)
-    "LOL": ("VB", "VERB"), 
-    "QQW": ("VB", "VERB"),
-    "QQWA": ("VB", "VERB"),
-    "EQQWA": ("VB", "VERB"),
-    "EIA": ("VB", "VERB"),
+# Split the document into spans
+#clause_spans = split_sentence_spans(doc)
+#print (f"clause_spans: {clause_spans}")
+def classify_spans(clause_spans):
+    main_CLOUSE = {
+        "MAIN": [],
+        "AND_MAIN": [],
+        "OR_MAIN": []
+    }
+    if_CLOUSE = {
+        "IF_MAIN": [],
+        "IF_AND_MAIN": [],
+        "IF_OR_MAIN": [],
+        "THEN": []
+    }
     
-}
-
-# Create a new Doc with custom POS tags and parse the dependencies
-new_doc = create_doc_with_custom_pos(text, custom_pos_tags)
-
-def get_subject(sentence):
+    current_clause = "MAIN"
     
-    subjects = []
+    for span in clause_spans:
+        if any(token.ent_type_ == "IF_CLOUSE" for token in span):
+            current_clause = "IF_MAIN"
+            if_CLOUSE[current_clause].append(span[1:].text.strip())  # Skip the first token ("if")
+        elif any(token.ent_type_ == "THEN_CLOUSE" for token in span):
+            current_clause = "THEN"
+            if_CLOUSE[current_clause].append(span[1:].text.strip())  # Skip the first token ("then")
+        elif any(token.ent_type_ == "AND_CLOUSE" for token in span):
+            if current_clause == "IF_MAIN":
+                if_CLOUSE["IF_AND_MAIN"].append(span[1:].text.strip())  # Skip the conjunction ("and")
+            else:
+                main_CLOUSE["AND_MAIN"].append(span[1:].text.strip())  # Skip the conjunction ("and")
+        elif any(token.ent_type_ == "OR_CLOUSE" for token in span):
+            if current_clause == "IF_MAIN":
+                if_CLOUSE["IF_OR_MAIN"].append(span[1:].text.strip())  # Skip the conjunction ("or")
+            else:
+                main_CLOUSE["OR_MAIN"].append(span[1:].text.strip())  # Skip the conjunction ("or")
+        else:
+            if current_clause == "IF_MAIN":
+                if_CLOUSE[current_clause].append(span.text.strip())
+            else:
+                main_CLOUSE["MAIN"].append(span.text.strip())
+    
+    return main_CLOUSE, if_CLOUSE
 
-    # Iterate over the tokens in the sentence
-    for token in sentence:
-        # Check if the token is the subject
-        if token.dep_ in ("nsubj", "nsubjpass"):
-            # Collect all tokens that are part of the compound subject
-            subject_parts = [child.text for child in token.lefts if child.dep_ == "compound"]
-            subject_parts.append(token.text)
-            subjects.append(" ".join(subject_parts))
+#main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
+
+#print("main_CLOUSE:", main_CLOUSE)
+#print("if_CLOUSE:", if_CLOUSE)
+
+def formating_clauses(doc):
+    Subject = None
+    Object = None
+    Preposition = None
+    Numbers = {}
+    Relations = {}
+
+    allowed_labels = {"LESS_THAN", "LESS_EQUAL", "BIGGER_THAN", "BIGGER_EQUAL", "EQUAL_TO", "BETWEEN"}
+
+    # Determine the entity label to use for numbers
+    entity_label = "EQUAL_TO"  # Default label
+    for ent in doc.ents:
+        if ent.label_ in allowed_labels:
+            entity_label = ent.label_
+            break
+
+    for token in doc:
+        if token.dep_ == "nsubj":
+            Subject = token.text
+            # Capture compound subjects
+            for child in token.children:
+                if child.dep_ == "conj":
+                    Subject += ' and ' + child.text
+        elif token.dep_ == "pobj" and not token.like_num:
+            Preposition = token.text
+        elif token.dep_ == "dobj" and not token.like_num:
+            Object = token.text
+            # Capture compound objects
+            for child in token.children:
+                if child.dep_ == "conj":
+                    Object += ' and ' + child.text
+         # Handle the tokens if they are part of "NUM_pairing" or "NUM" entities
+    for ent in doc.ents:
+        if ent.label_ in {"NUM_pairing", "NUM"}:
+            if entity_label not in Numbers:
+                Numbers[entity_label] = []
+            Numbers[entity_label].append(ent.text)
+
+    
+    # Check if "NOUN_PHRASE" is in the phrase
+    has_noun_phrase = any(ent.label_ == "NOUN_PHRASE" for ent in doc.ents)
+       
+    if Subject and not Object and not Preposition:
+        for key in Numbers:
+            Relations[Subject] = Numbers[key][0]
+            break
+    
+    elif Subject and Preposition and not Object and has_noun_phrase:
+        if has_noun_phrase:
+            for key in Numbers:
+                Relations[Subject] = Numbers[key][0]
+                break
+        else:
+            for key in Numbers:
+                Relations[Preposition] = Numbers[key][0]
+                break
+    
+    elif Object:
+        for key in Numbers:
+            Relations[Object] = Numbers[key][0]
+            break
+     
+
+
+
+    # Optional: print the variables and dictionary to see the extracted information
+    #print("Subject:", Subject)
+    #print("Object:", Object)
+    #print("Preposition:", Preposition)
+    #print("Numbers:", Numbers)
+    #print("Relations:", Relations)
+    
+    # Return the variables and dictionary if needed
+    return Subject, Object, Preposition, Numbers, Relations
+
+
+
+
+
+def classify_relations(main_CLOUSE, if_CLOUSE):
+    docs = []
+    dic_main_CLOUSE = {
+        "MAIN": [],
+        "AND": [],
+        "OR": []
+    }
+    dic_if_CLOUSE = {
+        "MAIN": [],
+        "AND": [],
+        "OR": [],
+        "THEN": []
+    }
+
+    # Process main_CLOUSE
+    for key, clauses in main_CLOUSE.items():
+        for idx, clause in enumerate(clauses, 1):
+            doc = nlp(clause)
+            docs.append(doc)
+            #print(f"\nDependencies for {key} clause: {clause}")
+            Subject, Object, Preposition, Numbers, Relations = formating_clauses(doc)
             
-        #para selecionar multiplos subjects pode se criar a funcionalidade aqui
+            # Construct the structure for each clause
+            clause_info = [
+                {"Subject": Subject},
+                {"Object": Object},
+                {"Preposision": Preposition},
+                {"NUM": Numbers},
+                {"Relations": Relations}
+            ]
+            
+            if key == "MAIN":
+                dic_main_CLOUSE["MAIN"].append({str(idx): clause_info})
+            elif key == "AND_MAIN":
+                dic_main_CLOUSE["AND"].append({str(idx): clause_info})
+            elif key == "OR_MAIN":
+                dic_main_CLOUSE["OR"].append({str(idx): clause_info})
 
-    if subjects:
-        return subjects[0]
-    
-    return None
+    # Process if_CLOUSE
+    for key, clauses in if_CLOUSE.items():
+        for idx, clause in enumerate(clauses, 1):
+            doc = nlp(clause)
+            docs.append(doc)
+            #print(f"\nDependencies for {key} clause: {clause}")
+            Subject, Object, Preposition, Numbers, Relations = formating_clauses(doc)
+            
+            # Construct the structure for each clause
+            clause_info = [
+                {"Subject": Subject},
+                {"Object": Object},
+                {"Preposision": Preposition},
+                {"NUM": Numbers},
+                {"Relations": Relations}
+            ]
+            
+            if key == "IF_MAIN":
+                dic_if_CLOUSE["MAIN"].append({str(idx): clause_info})
+            elif key == "IF_AND_MAIN":
+                dic_if_CLOUSE["AND"].append({str(idx): clause_info})
+            elif key == "IF_OR_MAIN":
+                dic_if_CLOUSE["OR"].append({str(idx): clause_info})
+            elif key == "THEN":
+                dic_if_CLOUSE["THEN"].append({str(idx): clause_info})
 
-def get_main_verb(sentence):
-    for token in sentence:
-        # Check if the token is the main verb (ROOT)
-        if token.dep_ == "ROOT":
-            return token.text
-    
-    return None
-
-def get_direct_objects(sentence):
-    direct_objects = [token.text for token in sentence if token.dep_ == "dobj"]
-    #return direct_objects[0]
-    if direct_objects:
-        return direct_objects[0]
-    return None
-
-def get_prepositional_objects(sentence):
-    prepositional_objects = [token.text for token in sentence if token.dep_ == "pobj"]
-    if prepositional_objects:
-        return prepositional_objects[0]
-    return None
-
-def get_numbers(sentence):
-    numbers = [token.text for token in sentence if token.like_num]
-    if numbers:
-        return numbers
-    return None
+    return docs, dic_main_CLOUSE, dic_if_CLOUSE
 
 
+# Call the function
+#docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
 
-for sentence in new_doc.sents:
 
-    subject = get_subject(sentence)
-    verb = get_main_verb(sentence)
-    direct_object = get_direct_objects(sentence)
-    prepositional_object = get_prepositional_objects(sentence)
-    numbers = get_numbers(sentence)
-    print()
-    print("---------------------------------------------------------------")
-    print(f"Sentence: {sentence}")
-    print(f"Subject: {subject}")
-    print(f"Verb: {verb}")
-    print(f"direct_object: {direct_object}")
-    print(f"prepositional_object: {prepositional_object}")
-    print(f"Numbers: {numbers}")
-    print("---------------------------------------------------------------")
+def main(phrase):
 
-    for token in new_doc:
-        print(f"{token.text}: {token.tag_}, {token.pos_}, {token.dep_}, {token.head.text}")
+    doc = nlp(phrase)
+    clause_spans = split_sentence_spans(doc)
+    main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
+    docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
 
-    # Verify the modifications
-    for token in new_doc:
-        if token.text in custom_pos_tags:
-            print(f"Modified POS tag for '{token.text}': {token.tag_}, UD POS tag: {token.pos_}")
+    return docs, dic_main_CLOUSE, dic_if_CLOUSE
+
+# TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5.
+#Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
+#User_GDAI must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5.
+#The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20.
+#The CampoTextoA of TTabelaRegistos must not exceed 200 characters.
+
+phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters."
+
+docs, dic_main_CLOUSE, dic_if_CLOUSE = main(phrase)
+
+# Print the updated dictionaries
+print("dic_main_CLOUSE")
+pprint.pprint(dic_main_CLOUSE)
+print()
+print("dic_if_CLOUSE")
+pprint.pprint(dic_if_CLOUSE)
+
+
+
+
+
