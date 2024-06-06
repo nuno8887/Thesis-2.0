@@ -1,6 +1,7 @@
 import spacy
 from spacy.tokens import Doc, Span
 from spacy.pipeline import EntityRuler
+import pprint
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -68,7 +69,7 @@ ruler.add_patterns(split_patterns)
 # Sample text
 # TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.
 #Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
-doc = nlp("TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.")
+doc = nlp("The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20")
 
 # Function to split sentence spans based on conjunctions and clauses
 def split_sentence_spans(doc):
@@ -143,8 +144,8 @@ def classify_spans(clause_spans):
 
 main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
 
-print("main_CLOUSE:", main_CLOUSE)
-print("if_CLOUSE:", if_CLOUSE)
+#print("main_CLOUSE:", main_CLOUSE)
+#print("if_CLOUSE:", if_CLOUSE)
 
 def formating_clauses(doc):
     Subject = None
@@ -212,11 +213,11 @@ def formating_clauses(doc):
 
 
     # Optional: print the variables and dictionary to see the extracted information
-    print("Subject:", Subject)
-    print("Object:", Object)
-    print("Preposition:", Preposition)
-    print("Numbers:", Numbers)
-    print("Relations:", Relations)
+    #print("Subject:", Subject)
+    #print("Object:", Object)
+    #print("Preposition:", Preposition)
+    #print("Numbers:", Numbers)
+    #print("Relations:", Relations)
     
     # Return the variables and dictionary if needed
     return Subject, Object, Preposition, Numbers, Relations
@@ -227,36 +228,90 @@ def formating_clauses(doc):
 
 def classify_relations(main_CLOUSE, if_CLOUSE):
     docs = []
+    dic_main_CLOUSE = {
+        "MAIN": [],
+        "AND": [],
+        "OR": []
+    }
+    dic_if_CLOUSE = {
+        "MAIN": [],
+        "AND": [],
+        "OR": [],
+        "THEN": []
+    }
 
     # Process main_CLOUSE
     for key, clauses in main_CLOUSE.items():
-        for clause in clauses:
+        for idx, clause in enumerate(clauses, 1):
             doc = nlp(clause)
             docs.append(doc)
-            print(f"\nDependencies for {key} clause: {clause}")
+            #print(f"\nDependencies for {key} clause: {clause}")
             Subject, Object, Preposition, Numbers, Relations = formating_clauses(doc)
-           
+            
+            # Construct the structure for each clause
+            clause_info = [
+                {"Subject": Subject},
+                {"Object": Object},
+                {"Preposision": Preposition},
+                {"NUM": Numbers},
+                {"Relations": Relations}
+            ]
+            
+            if key == "MAIN":
+                dic_main_CLOUSE["MAIN"].append({str(idx): clause_info})
+            elif key == "AND_MAIN":
+                dic_main_CLOUSE["AND"].append({str(idx): clause_info})
+            elif key == "OR_MAIN":
+                dic_main_CLOUSE["OR"].append({str(idx): clause_info})
 
     # Process if_CLOUSE
     for key, clauses in if_CLOUSE.items():
-        for clause in clauses:
+        for idx, clause in enumerate(clauses, 1):
             doc = nlp(clause)
             docs.append(doc)
-            print(f"\nDependencies for {key} clause: {clause}")
+            #print(f"\nDependencies for {key} clause: {clause}")
             Subject, Object, Preposition, Numbers, Relations = formating_clauses(doc)
             
+            # Construct the structure for each clause
+            clause_info = [
+                {"Subject": Subject},
+                {"Object": Object},
+                {"Preposision": Preposition},
+                {"NUM": Numbers},
+                {"Relations": Relations}
+            ]
+            
+            if key == "IF_MAIN":
+                dic_if_CLOUSE["MAIN"].append({str(idx): clause_info})
+            elif key == "IF_AND_MAIN":
+                dic_if_CLOUSE["AND"].append({str(idx): clause_info})
+            elif key == "IF_OR_MAIN":
+                dic_if_CLOUSE["OR"].append({str(idx): clause_info})
+            elif key == "THEN":
+                dic_if_CLOUSE["THEN"].append({str(idx): clause_info})
 
-    return docs
+    return docs, dic_main_CLOUSE, dic_if_CLOUSE
+
 
 # Call the function
-docs = classify_relations(main_CLOUSE, if_CLOUSE)
+docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
+
+
+
+
+# Print the updated dictionaries
+print("dic_main_CLOUSE")
+pprint.pprint(dic_main_CLOUSE)
+print()
+print("dic_if_CLOUSE")
+pprint.pprint(dic_if_CLOUSE)
 
 
 
 
 
 
-dic_main_CLOUSE = {
+dic_main_CLOUSE1 = {
     "MAIN": {
         "1": [
             {"Subject": None},
@@ -286,7 +341,7 @@ dic_main_CLOUSE = {
     },
 }
 
-dic_if_CLOUSE = {
+dic_if_CLOUSE1 = {
     "MAIN": {
         "1": [
             {"Subject": None},
