@@ -65,7 +65,9 @@ ruler.add_patterns(split_patterns)
 
 
 # Sample text
-doc = nlp("TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.")
+# TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.
+#Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
+doc = nlp("The CampoTextoA of TTabelaRegistos must not exceed 200 characters.")
 
 # Function to split sentence spans based on conjunctions and clauses
 def split_sentence_spans(doc):
@@ -88,12 +90,16 @@ def split_sentence_spans(doc):
 
     if if_start != 0:
         clause_spans.append(Span(doc, if_start, len(doc)))
+    
+    # If no spans were added, add the entire doc as a single span
+    if not clause_spans:
+        clause_spans.append(Span(doc, 0, len(doc)))
 
     return [span for span in clause_spans if span.text.strip()]
 
 # Split the document into spans
 clause_spans = split_sentence_spans(doc)
-
+print (f"clause_spans: {clause_spans}")
 def classify_spans(clause_spans):
     main_CLOUSE = {
         "MAIN": [],
@@ -140,31 +146,78 @@ print("main_CLOUSE:", main_CLOUSE)
 print("if_CLOUSE:", if_CLOUSE)
 
 def formating_clauses(doc):
-    Subject = {}
-    Object = {}
-    Preposition = {}
+    Subject = None
+    Object = None
+    Preposition = None
     Numbers = {}
     Relations = {}
 
+    allowed_labels = {"LESS_THAN", "LESS_EQUAL", "BIGGER_THAN", "BIGGER_EQUAL", "EQUAL_TO", "BETWEEN"}
+
+    # Determine the entity label to use for numbers
+    entity_label = "EQUAL_TO"  # Default label
+    for ent in doc.ents:
+        if ent.label_ in allowed_labels:
+            entity_label = ent.label_
+            break
+
     for token in doc:
         if token.dep_ == "nsubj":
-            Subject[token.text] = token
+            Subject = token.text
+            # Capture compound subjects
+            for child in token.children:
+                if child.dep_ == "conj":
+                    Subject += ' and ' + child.text
         elif token.dep_ == "pobj" and not token.like_num:
-            Preposition[token.text] = token
+            Preposition = token.text
         elif token.dep_ == "dobj" and not token.like_num:
-            Object[token.text] = token
+            Object = token.text
+            # Capture compound objects
+            for child in token.children:
+                if child.dep_ == "conj":
+                    Object += ' and ' + child.text
         elif token.like_num:
-            Numbers[token.text] = token
+            if entity_label not in Numbers:
+                Numbers[entity_label] = []
+            Numbers[entity_label].append(token.text)
 
-    # Optional: print the dictionaries to see the extracted information
+    
+    # Check if "NOUN_PHRASE" is in the phrase
+    has_noun_phrase = any(ent.label_ == "NOUN_PHRASE" for ent in doc.ents)
+       
+    if Subject and not Object and not Preposition:
+        for key in Numbers:
+            Relations[Subject] = Numbers[key][0]
+            break
+    
+    elif Subject and Preposition and not Object and has_noun_phrase:
+        if has_noun_phrase:
+            for key in Numbers:
+                Relations[Subject] = Numbers[key][0]
+                break
+        else:
+            for key in Numbers:
+                Relations[Preposition] = Numbers[key][0]
+                break
+    
+    elif Object:
+        for key in Numbers:
+            Relations[Object] = Numbers[key][0]
+            break
+     
+
+
+
+    # Optional: print the variables and dictionary to see the extracted information
     print("Subject:", Subject)
     print("Object:", Object)
     print("Preposition:", Preposition)
     print("Numbers:", Numbers)
     print("Relations:", Relations)
     
-    # Return the dictionaries if needed
+    # Return the variables and dictionary if needed
     return Subject, Object, Preposition, Numbers, Relations
+
 
 
 
