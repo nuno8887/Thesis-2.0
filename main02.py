@@ -7,18 +7,17 @@ nlp = spacy.load("en_core_web_lg")
 ruler = nlp.add_pipe('entity_ruler', before='ner')
 
 split_patterns = [
+
+    #FIRST PART-------------------------------------------
     {"label": "IF_CLOUSE", "pattern": [{"LEMMA": "if"}]},
     {"label": "THEN_CLOUSE", "pattern": [{"LEMMA": "then"}]},
     {"label": "AND_CLOUSE_NUM", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
     {"label": "AND_CLOUSE", "pattern": [{"LOWER": "and"}]},
     {"label": "OR_CLOUSE_NUM", "pattern": [{"LIKE_NUM": True}, {"LOWER": "or"}, {"LIKE_NUM": True}]},
     {"label": "OR_CLOUSE", "pattern": [{"LOWER": "or"}]},
-]
+    #---------------------------------------------------------
 
-ruler.add_patterns(split_patterns)
-
-selecting_patterns = [
-     # Define patterns for "nsubj", "prep", "pobj"
+    # Define patterns for "nsubj", "prep", "pobj"
     {"label": "NOUN_PHRASE","pattern": [{"DEP": "nsubj"},{"DEP": "prep"},{"DEP": "pobj"}]},
 
     #LESS THAN
@@ -60,11 +59,13 @@ selecting_patterns = [
     # NUM and/or NUM
     {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
     {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "or"}, {"LIKE_NUM": True}]},
-
 ]
 
+ruler.add_patterns(split_patterns)
+
+
 # Sample text
-doc = nlp("TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 if CampoInteiroA of TTabelaRegistos is bigger than 10 or 12 and TTable is equal to 5 then TTable is fine.")
+doc = nlp("TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.")
 
 # Function to split sentence spans based on conjunctions and clauses
 def split_sentence_spans(doc):
@@ -139,10 +140,6 @@ print("main_CLOUSE:", main_CLOUSE)
 print("if_CLOUSE:", if_CLOUSE)
 
 
-def print_dependencies(doc):
-    for token in doc:
-        print(f'{token.text:<15} {token.dep_:<10} {token.head.text:<15} {token.head.pos_:<10} {str([child for child in token.children]):<15}')
-
 
 def classify_relations(main_CLOUSE, if_CLOUSE):
     docs = []
@@ -152,9 +149,10 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
         for clause in clauses:
             doc = nlp(clause)
             docs.append(doc)
+            doc
             # Print the dependency structure
             print(f"\nDependencies for {key} clause: {clause}")
-            print_dependencies(doc)
+           
 
     # Process if_CLOUSE
     for key, clauses in if_CLOUSE.items():
@@ -163,7 +161,7 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
             docs.append(doc)
             # Print the dependency structure
             print(f"\nDependencies for {key} clause: {clause}")
-            print_dependencies(doc)
+            
 
     return docs
 
