@@ -139,6 +139,34 @@ main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
 print("main_CLOUSE:", main_CLOUSE)
 print("if_CLOUSE:", if_CLOUSE)
 
+def formating_clauses(doc):
+    Subject = {}
+    Object = {}
+    Preposition = {}
+    Numbers = {}
+    Relations = {}
+
+    for token in doc:
+        if token.dep_ == "nsubj":
+            Subject[token.text] = token
+        elif token.dep_ == "pobj" and not token.like_num:
+            Preposition[token.text] = token
+        elif token.dep_ == "dobj" and not token.like_num:
+            Object[token.text] = token
+        elif token.like_num:
+            Numbers[token.text] = token
+
+    # Optional: print the dictionaries to see the extracted information
+    print("Subject:", Subject)
+    print("Object:", Object)
+    print("Preposition:", Preposition)
+    print("Numbers:", Numbers)
+    print("Relations:", Relations)
+    
+    # Return the dictionaries if needed
+    return Subject, Object, Preposition, Numbers, Relations
+
+
 
 
 def classify_relations(main_CLOUSE, if_CLOUSE):
@@ -149,9 +177,8 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
         for clause in clauses:
             doc = nlp(clause)
             docs.append(doc)
-            doc
-            # Print the dependency structure
             print(f"\nDependencies for {key} clause: {clause}")
+            formating_clauses(doc)
            
 
     # Process if_CLOUSE
@@ -159,8 +186,8 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
         for clause in clauses:
             doc = nlp(clause)
             docs.append(doc)
-            # Print the dependency structure
             print(f"\nDependencies for {key} clause: {clause}")
+            formating_clauses(doc)
             
 
     return docs
@@ -173,13 +200,14 @@ docs = classify_relations(main_CLOUSE, if_CLOUSE)
 
 
 
-dic_main_CLOUSE = {
+dic_main_CLOUSE1 = {
     "MAIN": {
         "1": [
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
     "AND": {
@@ -187,7 +215,8 @@ dic_main_CLOUSE = {
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
     "OR": {
@@ -195,18 +224,20 @@ dic_main_CLOUSE = {
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
 }
 
-dic_if_CLOUSE = {
+dic_if_CLOUSE2 = {
     "MAIN": {
         "1": [
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
     "AND": {
@@ -214,7 +245,8 @@ dic_if_CLOUSE = {
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
     "OR": {
@@ -222,7 +254,8 @@ dic_if_CLOUSE = {
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
     "THEN": {
@@ -230,7 +263,8 @@ dic_if_CLOUSE = {
             {"Subject": None},
             {"Object": None},
             {"Preposision": None},
-            {"NUM": None}
+            {"NUM": None},
+            {"Relations": None}
         ]
     },
 }
