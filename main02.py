@@ -92,6 +92,43 @@ main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
 print("main_CLOUSE:", main_CLOUSE)
 print("if_CLOUSE:", if_CLOUSE)
 
+
+def print_dependencies(doc):
+    for token in doc:
+        print(f'{token.text:<15} {token.dep_:<10} {token.head.text:<15} {token.head.pos_:<10} {str([child for child in token.children]):<15}')
+
+
+def classify_relations(main_CLOUSE, if_CLOUSE):
+    docs = []
+
+    # Process main_CLOUSE
+    for key, clauses in main_CLOUSE.items():
+        for clause in clauses:
+            doc = nlp(clause)
+            docs.append(doc)
+            # Print the dependency structure
+            print(f"\nDependencies for {key} clause: {clause}")
+            print_dependencies(doc)
+
+    # Process if_CLOUSE
+    for key, clauses in if_CLOUSE.items():
+        for clause in clauses:
+            doc = nlp(clause)
+            docs.append(doc)
+            # Print the dependency structure
+            print(f"\nDependencies for {key} clause: {clause}")
+            print_dependencies(doc)
+
+    return docs
+
+# Call the function
+docs = classify_relations(main_CLOUSE, if_CLOUSE)
+
+
+
+
+
+
 dic_main_CLOUSE = {
     "MAIN": {
         "1": [
@@ -154,4 +191,6 @@ dic_if_CLOUSE = {
     },
 }
 
-print(dic_main_CLOUSE)
+#print(dic_main_CLOUSE)
+
+
