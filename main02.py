@@ -6,7 +6,7 @@ nlp = spacy.load("en_core_web_lg")
 
 ruler = nlp.add_pipe('entity_ruler', before='ner')
 
-patterns = [
+split_patterns = [
     {"label": "IF_CLOUSE", "pattern": [{"LEMMA": "if"}]},
     {"label": "THEN_CLOUSE", "pattern": [{"LEMMA": "then"}]},
     {"label": "AND_CLOUSE_NUM", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
@@ -15,7 +15,53 @@ patterns = [
     {"label": "OR_CLOUSE", "pattern": [{"LOWER": "or"}]},
 ]
 
-ruler.add_patterns(patterns)
+ruler.add_patterns(split_patterns)
+
+selecting_patterns = [
+     # Define patterns for "nsubj", "prep", "pobj"
+    {"label": "NOUN_PHRASE","pattern": [{"DEP": "nsubj"},{"DEP": "prep"},{"DEP": "pobj"}]},
+
+    #LESS THAN
+    {"label": "LESS_THAN", "pattern": [{"LOWER": "less"}, {"LOWER": "than"}]},# less than
+    {"label": "LESS_THAN", "pattern": [{"LOWER": "fewer"}, {"LOWER": "than"}]},# fewer than
+    {"label": "LESS_THAN", "pattern": [{"LEMMA": "lower"}, {"LOWER": "than"}]},# lower than
+    {"label": "LESS_THAN", "pattern": [{"LEMMA": "smaller"}, {"LOWER": "than"}]},# smaller than
+
+    #LESS or EQUAL TO
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "no"}, {"LOWER": "more"}, {"LOWER": "than"}]},# no more than
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "more"}, {"LOWER": "than"}]},# not more than
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "less"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # less or equal to
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "at"}, {"LOWER": "most"}]},  # at most
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "up"}, {"LOWER": "to"}]},  # up to
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "exceed"}]},  # not exceed
+
+
+
+    #BIGGER THAN
+    {"label": "BIGGER_THAN", "pattern": [{"LOWER": "bigger"}, {"LOWER": "than"}]}, # bigger than
+    {"label": "BIGGER_THAN", "pattern": [{"LEMMA": "more"}, {"LOWER": "than"}]},# more than
+    {"label": "BIGGER_THAN", "pattern": [{"LOWER": "exceed"}]},  # exceed
+
+
+    #BIGGER or EQUAL TO
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "greater"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # greater or equal to
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "equal"}, {"LOWER": "or"}, {"LOWER": "greater"}, {"LOWER": "than"}]},  # equal or greater than
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "less"}, {"LOWER": "than"}]},  # not less than
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "less"}, {"LOWER": "than"}]},  # no less than
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "at"}, {"LOWER": "least"}]},  # at least
+    
+
+    #EQUAL TO
+    {"label": "EQUAL_TO", "pattern": [{"LOWER": "equal"}]},# equal
+
+    #BETWEEN
+    {"label": "BETWEEN", "pattern": [{"LOWER": "between"}]},# between
+
+    # NUM and/or NUM
+    {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
+    {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "or"}, {"LIKE_NUM": True}]},
+
+]
 
 # Sample text
 doc = nlp("TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 if CampoInteiroA of TTabelaRegistos is bigger than 10 or 12 and TTable is equal to 5 then TTable is fine.")
