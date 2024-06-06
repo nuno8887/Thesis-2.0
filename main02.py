@@ -59,6 +59,7 @@ split_patterns = [
     # NUM and/or NUM
     {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "and"}, {"LIKE_NUM": True}]},
     {"label": "NUM_pairing", "pattern": [{"LIKE_NUM": True}, {"LOWER": "or"}, {"LIKE_NUM": True}]},
+    {"label": "NUM", "pattern": [{"LIKE_NUM": True}]},
 ]
 
 ruler.add_patterns(split_patterns)
@@ -67,7 +68,7 @@ ruler.add_patterns(split_patterns)
 # Sample text
 # TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.
 #Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
-doc = nlp("The CampoTextoA of TTabelaRegistos must not exceed 200 characters.")
+doc = nlp("The CampoInteiroA of TTabelaRegistos must be a value smaller than 20")
 
 # Function to split sentence spans based on conjunctions and clauses
 def split_sentence_spans(doc):
@@ -99,7 +100,7 @@ def split_sentence_spans(doc):
 
 # Split the document into spans
 clause_spans = split_sentence_spans(doc)
-print (f"clause_spans: {clause_spans}")
+#print (f"clause_spans: {clause_spans}")
 def classify_spans(clause_spans):
     main_CLOUSE = {
         "MAIN": [],
@@ -176,10 +177,12 @@ def formating_clauses(doc):
             for child in token.children:
                 if child.dep_ == "conj":
                     Object += ' and ' + child.text
-        elif token.like_num:
+         # Handle the tokens if they are part of "NUM_pairing" or "NUM" entities
+    for ent in doc.ents:
+        if ent.label_ in {"NUM_pairing", "NUM"}:
             if entity_label not in Numbers:
                 Numbers[entity_label] = []
-            Numbers[entity_label].append(token.text)
+            Numbers[entity_label].append(ent.text)
 
     
     # Check if "NOUN_PHRASE" is in the phrase
