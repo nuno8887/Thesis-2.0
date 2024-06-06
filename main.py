@@ -224,9 +224,6 @@ def formating_clauses(doc):
     return Subject, Object, Preposition, Numbers, Relations
 
 
-
-
-
 def classify_relations(main_CLOUSE, if_CLOUSE):
     docs = []
     dic_main_CLOUSE = {
@@ -305,7 +302,7 @@ def main(phrase):
     main_CLOUSE, if_CLOUSE = classify_spans(clause_spans)
     docs, dic_main_CLOUSE, dic_if_CLOUSE = classify_relations(main_CLOUSE, if_CLOUSE)
 
-    return docs, dic_main_CLOUSE, dic_if_CLOUSE
+    return docs, dic_main_CLOUSE, dic_if_CLOUSE, phrase
 
 # TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5.
 #Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
@@ -315,9 +312,11 @@ def main(phrase):
 
 phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters."
 
-docs, dic_main_CLOUSE, dic_if_CLOUSE = main(phrase)
+docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main(phrase)
 
 # Print the updated dictionaries
+print(text)
+print()
 print("dic_main_CLOUSE")
 pprint.pprint(dic_main_CLOUSE)
 print()
