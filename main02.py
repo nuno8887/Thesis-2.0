@@ -234,7 +234,7 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
             doc = nlp(clause)
             docs.append(doc)
             print(f"\nDependencies for {key} clause: {clause}")
-            formating_clauses(doc)
+            Subject, Object, Preposition, Numbers, Relations = formating_clauses(doc)
            
 
     # Process if_CLOUSE
@@ -243,7 +243,7 @@ def classify_relations(main_CLOUSE, if_CLOUSE):
             doc = nlp(clause)
             docs.append(doc)
             print(f"\nDependencies for {key} clause: {clause}")
-            formating_clauses(doc)
+            Subject, Object, Preposition, Numbers, Relations = formating_clauses(doc)
             
 
     return docs
