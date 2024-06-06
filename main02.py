@@ -68,7 +68,7 @@ ruler.add_patterns(split_patterns)
 # Sample text
 # TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.
 #Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
-doc = nlp("The CampoInteiroA of TTabelaRegistos must be a value smaller than 20")
+doc = nlp("TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5 then TTable is fine.")
 
 # Function to split sentence spans based on conjunctions and clauses
 def split_sentence_spans(doc):
@@ -256,7 +256,7 @@ docs = classify_relations(main_CLOUSE, if_CLOUSE)
 
 
 
-dic_main_CLOUSE1 = {
+dic_main_CLOUSE = {
     "MAIN": {
         "1": [
             {"Subject": None},
@@ -286,7 +286,7 @@ dic_main_CLOUSE1 = {
     },
 }
 
-dic_if_CLOUSE2 = {
+dic_if_CLOUSE = {
     "MAIN": {
         "1": [
             {"Subject": None},
