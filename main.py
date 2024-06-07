@@ -310,7 +310,7 @@ def main(phrase):
 #The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20.
 #The CampoTextoA of TTabelaRegistos must not exceed 200 characters.
 
-phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters."
+phrase = "Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10."
 
 docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main(phrase)
 
@@ -322,6 +322,8 @@ pprint.pprint(dic_main_CLOUSE)
 print()
 print("dic_if_CLOUSE")
 pprint.pprint(dic_if_CLOUSE)
+print()
+print(docs)
 
 
 
