@@ -10,6 +10,8 @@ def process_conditions(conditions):
                 subject = value
             elif key == 'Object':
                 obj = value
+                if obj in ["characters", "character", "chars", "char", "extent", "distance", "span", "duration", "measurement", "magnitude", "scope", "stretch", "interval", "breadth", "height", "depth", "propongation", "reach", "range"]:  # If Object is not None
+                    subject = f"LEN({subject})"
             elif key == 'Preposision':
                 table_name = value
             elif key == 'NUM':
@@ -101,11 +103,85 @@ def build_sql_query(dic_main, dic_if):
     sql_query = f"SELECT * FROM {table_name} WHERE\n  {final_where_clause.replace(' AND ', '\n  AND ').replace(' OR ', '\n  OR ')};"
     return sql_query
 
+def process_clauses(dic_main, dic_if):
+    def extract_values(clause_section):
+        result = {}
+        for condition_group in clause_section:
+            for key, conditions in condition_group.items():
+                preposition = None
+                subject = None
+                obj = None
+                for condition in conditions:
+                    for cond_key, cond_value in condition.items():
+                        if cond_key == 'Preposision':
+                            preposition = cond_value
+                        elif cond_key == 'Subject':
+                            subject = cond_value
+                        elif cond_key == 'Object':
+                            obj = cond_value
+                if preposition:
+                    if preposition not in result:
+                        result[preposition] = []
+                    if subject:
+                        result[preposition].append(subject)
+                    if obj:
+                        result[preposition].append(obj)
+        return result
+    
+    # Process MAIN, AND, OR sections for both dictionaries
+    main_result = extract_values(dic_main.get('MAIN', []))
+    and_result = extract_values(dic_main.get('AND', []))
+    or_result = extract_values(dic_main.get('OR', []))
+
+    if_result = extract_values(dic_if.get('MAIN', []))
+    if_and_result = extract_values(dic_if.get('AND', []))
+    if_or_result = extract_values(dic_if.get('OR', []))
+    if_then_result = extract_values(dic_if.get('THEN', []))
+
+    # Combine results
+    combined_result = main_result
+
+    for key, value in and_result.items():
+        if key in combined_result:
+            combined_result[key].extend(value)
+        else:
+            combined_result[key] = value
+
+    for key, value in or_result.items():
+        if key in combined_result:
+            combined_result[key].extend(value)
+        else:
+            combined_result[key] = value
+
+    for key, value in if_result.items():
+        if key in combined_result:
+            combined_result[key].extend(value)
+        else:
+            combined_result[key] = value
+
+    for key, value in if_and_result.items():
+        if key in combined_result:
+            combined_result[key].extend(value)
+        else:
+            combined_result[key] = value
+
+    for key, value in if_or_result.items():
+        if key in combined_result:
+            combined_result[key].extend(value)
+        else:
+            combined_result[key] = value
+
+    for key, value in if_then_result.items():
+        if key in combined_result:
+            combined_result[key].extend(value)
+        else:
+            combined_result[key] = value
+
+    return combined_result
+
 # Main script to process the phrase and build the SQL query
-#TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 50
-#The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20
-#The CampoTextoA of TTabelaRegistos must not exceed 200 characters.
-phrase = "Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10."
+#Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10.
+phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters, Camp is equal to 2, Lamp is less than 4, User_GDAI is equal to 5."
 
 docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
 
@@ -125,3 +201,9 @@ sql_query = build_sql_query(dic_main_CLOUSE, dic_if_CLOUSE)
 print()
 print("Generated SQL Query:")
 print(sql_query)
+
+# Process clauses and print the result
+processed_clauses = process_clauses(dic_main_CLOUSE, dic_if_CLOUSE)
+print()
+print("Processed Clauses:")
+pprint.pprint(processed_clauses)
