@@ -1,6 +1,3 @@
-import main
-import pprint
-
 def process_conditions(conditions):
     clauses = []
     table_name = ""
@@ -50,6 +47,7 @@ def build_sql_query(dic_main, dic_if):
     main_clauses = []
     and_clauses = []
     or_clauses = []
+    then_clauses = []
     table_name = ""
 
     if 'MAIN' in dic_main and dic_main['MAIN']:
@@ -92,33 +90,66 @@ def build_sql_query(dic_main, dic_if):
         _, then_clause = build_clauses(dic_if['THEN'])
         if_clauses.append(f"({then_clause})")
 
-    if if_clauses:
-        if_where_clause = " AND ".join(if_clauses)
-        final_where_clause = f"({main_where_clause}) AND ({if_where_clause})"
-    else:
-        final_where_clause = f"({main_where_clause})"
+    if_where_clause = " AND ".join(if_clauses)
+
+    final_where_clause = f"({main_where_clause}) AND ({if_where_clause})"
 
     sql_query = f"SELECT * FROM {table_name} WHERE\n  {final_where_clause.replace(' AND ', '\n  AND ').replace(' OR ', '\n  OR ')};"
     return sql_query
 
-# Main script to process the phrase and build the SQL query
-phrase = "The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20."
+# Example dictionaries
+dic_main_CLOUSE = {
+    'AND': [{'2': [{'Subject': 'CampoInteiroB'},
+                   {'Object': None},
+                   {'Preposision': 'TTabelaRegistos'},
+                   {'NUM': {'BETWEEN': ['30 and 40']}},
+                   {'Relations': {'CampoInteiroB': '30 and 40'}}]}],
+    'MAIN': [{'1': [{'Subject': 'CampoInteiroA'},
+                    {'Object': None},
+                    {'Preposision': 'TTabelaRegistos'},
+                    {'NUM': {'BETWEEN': ['10 and 20']}},
+                    {'Relations': {'CampoInteiroA': '10 and 20'}}]}],
+    'OR': [{'3': [{'Subject': 'CampoInteiroC'},
+                  {'Object': None},
+                  {'Preposision': 'TTabelaRegistos'},
+                  {'NUM': {'BETWEEN': ['50 and 60']}},
+                  {'Relations': {'CampoInteiroC': '50 and 60'}}]},
+           {'4': [{'Subject': 'CampoInteiroD'},
+                  {'Object': None},
+                  {'Preposision': 'TTabelaRegistos'},
+                  {'NUM': {'BIGGER_THAN': ['70']}},
+                  {'Relations': {'CampoInteiroD': '70 and 80'}}]}]
+}
 
-docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
+dic_if_CLOUSE = {
+    'AND': [{'5': [{'Subject': 'CampoInteiroE'},
+                   {'Object': None},
+                   {'Preposision': 'TTabelaRegistos'},
+                   {'NUM': {'LESS_EQUAL': ['100']}},
+                   {'Relations': {'CampoInteiroE': '90 and 100'}}]}],
+    'MAIN': [{'6': [{'Subject': 'CampoInteiroF'},
+                    {'Object': None},
+                    {'Preposision': 'TTabelaRegistos'},
+                    {'NUM': {'EQUAL_TO': ['115']}},
+                    {'Relations': {'CampoInteiroF': '110 and 120'}}]}],
+    'OR': [{'7': [{'Subject': 'CampoInteiroG'},
+                  {'Object': None},
+                  {'Preposision': 'TTabelaRegistos'},
+                  {'NUM': {'LESS_THAN': ['140']}},
+                  {'Relations': {'CampoInteiroG': '130 and 140'}}]},
+           {'8': [{'Subject': 'CampoInteiroH'},
+                  {'Object': None},
+                  {'Preposision': 'TTabelaRegistos'},
+                  {'NUM': {'BIGGER_EQUAL': ['150']}},
+                  {'Relations': {'CampoInteiroH': '150 and 160'}}]}],
+    'THEN': [{'9': [{'Subject': 'CampoInteiroI'},
+                    {'Object': None},
+                    {'Preposision': 'TTabelaRegistos'},
+                    {'NUM': {'BETWEEN': ['160 and 170']}},
+                    {'Relations': {'CampoInteiroI': '160 and 170'}}]}]
+}
 
-# Print the updated dictionaries
-print(text)
-print()
-print("dic_main_CLOUSE")
-pprint.pprint(dic_main_CLOUSE)
-print()
-print("dic_if_CLOUSE")
-pprint.pprint(dic_if_CLOUSE)
-print()
-print(docs)
-
-# Build and print the SQL query
+# Building the SQL query
 sql_query = build_sql_query(dic_main_CLOUSE, dic_if_CLOUSE)
-print()
-print("Generated SQL Query:")
+
 print(sql_query)
