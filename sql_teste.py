@@ -102,7 +102,7 @@ def build_sql_query(dic_main, dic_if):
     return sql_query
 
 # Main script to process the phrase and build the SQL query
-phrase = "The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20."
+phrase = "TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 5"
 
 docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
 
