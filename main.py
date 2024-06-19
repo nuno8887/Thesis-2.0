@@ -31,6 +31,8 @@ split_patterns = [
     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "no"}, {"LOWER": "more"}, {"LOWER": "than"}]},# no more than
     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "more"}, {"LOWER": "than"}]},# not more than
     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "less"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # less or equal to
+     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "lower"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # lower or equal to
+    {"label": "LESS_EQUAL", "pattern": [{"LOWER": "smaller"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # smaller or equal to
     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "at"}, {"LOWER": "most"}]},  # at most
     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "up"}, {"LOWER": "to"}]},  # up to
     {"label": "LESS_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "exceed"}]},  # not exceed
@@ -45,6 +47,7 @@ split_patterns = [
 
     #BIGGER or EQUAL TO
     {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "greater"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # greater or equal to
+    {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "bigger"}, {"LOWER": "or"}, {"LOWER": "equal"}]}, # bigger or equal to
     {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "equal"}, {"LOWER": "or"}, {"LOWER": "greater"}, {"LOWER": "than"}]},  # equal or greater than
     {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "less"}, {"LOWER": "than"}]},  # not less than
     {"label": "BIGGER_EQUAL", "pattern": [{"LOWER": "not"}, {"LOWER": "less"}, {"LOWER": "than"}]},  # no less than

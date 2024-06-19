@@ -158,39 +158,50 @@ def process_clauses(dic_main, dic_if):
 
     return dic_main_list, dic_if_list, result_dict_main
 
-# Main script to process the phrase and build the SQL query
-#The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5 if CampoTesteInteiroA is bigger than 10.
-#The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5.
-#The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5 if CampoInteiroA of TTabelaRegistos is bigger than 10.
-phrase = "The CampoInteiroA of TTabelaRegistos must be a value bigger or equal to 10."
+# List of phrases to process
+phrases = [
+    "The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20",
+    "The CampoInteiroA of TTabelaRegistos must be a value bigger than 10",
+    "The CampoInteiroA of TTabelaRegistos must be bigger than 10",
+    "The CampoInteiroA of TTabelaRegistos must be a value bigger or equal to 10",
+    "The CampoInteiroA of TTabelaRegistos must be a value lower than 20",
+    "The CampoInteiroA of TTabelaRegistos must be a value smaller than 20",
+    "The CampoInteiroA of TTabelaRegistos must be lower or equal to 20",
+    "The CampoInteiroA of TTabelaRegistos must be smaller or equal to 20",
+    "The CampoTextoA of TTabelaRegistos must not exceed 200 characters.",
+    "The CampoTextoA of TTabelaRegistos must not exceed 200 chars.",
+    "The CampoTextoA of TTabelaRegistos must have at least 5 characters.",
+    "The CampoTextoA of TTabelaRegistos must exceed 5 characters.",
+]
 
-docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
+all_dic_main_CLOUSE = []
+all_dic_if_CLOUSE = []
 
-# Print the updated dictionaries
-print(text)
-print()
-print("dic_main_CLOUSE")
-pprint.pprint(dic_main_CLOUSE)
-print()
-print("dic_if_CLOUSE")
-pprint.pprint(dic_if_CLOUSE)
-print()
-print(docs)
+for phrase in phrases:
+    docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
+    all_dic_main_CLOUSE.append(dic_main_CLOUSE)
+    all_dic_if_CLOUSE.append(dic_if_CLOUSE)
 
-# Build and print the SQL query
-sql_query = build_sql_query(dic_main_CLOUSE, dic_if_CLOUSE)
-print()
-print("Generated SQL Query:")
-print(sql_query)
+# Print the updated dictionaries for each phrase
+for i, phrase in enumerate(phrases):
+    print(f"Phrase {i+1}: {phrase}")
+    print("dic_main_CLOUSE")
+    pprint.pprint(all_dic_main_CLOUSE[i])
+    print()
+    print("dic_if_CLOUSE")
+    pprint.pprint(all_dic_if_CLOUSE[i])
+    print()
 
-# Process clauses and print the result
-dic_main_list, dic_if_list, result_dict_main = process_clauses(dic_main_CLOUSE, dic_if_CLOUSE)
-print()
-print("dic_main_list:")
-pprint.pprint(dic_main_list)
-print()
-print("dic_if_list:")
-pprint.pprint(dic_if_list)
-print()
-print("Result Dictionary (Main):")
-pprint.pprint(result_dict_main)
+# Build and print the SQL queries and processed clauses for each phrase
+for i, phrase in enumerate(phrases):
+    print(f"Processing Phrase {i+1}: {phrase}")
+    dic_main_list, dic_if_list, result_dict_main = process_clauses(all_dic_main_CLOUSE[i], all_dic_if_CLOUSE[i])
+    sql_query = build_sql_query(all_dic_main_CLOUSE[i], all_dic_if_CLOUSE[i])
+    print()
+    print("Generated SQL Query:")
+    print(sql_query)
+    print()
+    print()
+    print("Result Dictionary (Main):")
+    pprint.pprint(result_dict_main)
+    print()
