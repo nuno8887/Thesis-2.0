@@ -143,23 +143,26 @@ def process_clauses(dic_main, dic_if):
                             result_dict_main[preposition] = dic_main_list
 
     # Create the final dictionary with MAIN[Preposision] as key for dic_if, or add to dic_main_list if Preposision is None
-    result_dict_if = {}
-    if dic_if.get('MAIN'):
-        for condition_group in dic_if['MAIN']:
-            for key, conditions in condition_group.items():
-                for condition in conditions:
-                    if 'Preposision' in condition:
-                        preposition = condition['Preposision']
-                        if preposition:
-                            result_dict_if[preposition] = dic_if_list
+    for condition_group in dic_if.get('MAIN', []):
+        for key, conditions in condition_group.items():
+            for condition in conditions:
+                if 'Preposision' in condition:
+                    preposition = condition['Preposision']
+                    if preposition:
+                        if preposition in result_dict_main:
+                            result_dict_main[preposition].extend(dic_if_list)
                         else:
-                            dic_main_list.extend(dic_if_list)
+                            result_dict_main[preposition] = dic_if_list
+                    else:
+                        dic_main_list.extend(dic_if_list)
 
-    return dic_main_list, dic_if_list, result_dict_main, result_dict_if
+    return dic_main_list, dic_if_list, result_dict_main
 
 # Main script to process the phrase and build the SQL query
+#The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5 if CampoTesteInteiroA is bigger than 10.
+#The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5.
 #The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5 if CampoInteiroA of TTabelaRegistos is bigger than 10.
-phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5 if CampoTesteInteiroA is bigger than 10."
+phrase = "The CampoTextoA of TTabelaRegistos must not exceed 200 characters and Camp is equal to 2 and Lamp is less than 4 and User_GDAI is equal to 5 if CampoInteiroA of TTabelaTesteRegistos is bigger than 10."
 
 docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
 
@@ -181,7 +184,7 @@ print("Generated SQL Query:")
 print(sql_query)
 
 # Process clauses and print the result
-dic_main_list, dic_if_list, result_dict_main, result_dict_if = process_clauses(dic_main_CLOUSE, dic_if_CLOUSE)
+dic_main_list, dic_if_list, result_dict_main = process_clauses(dic_main_CLOUSE, dic_if_CLOUSE)
 print()
 print("dic_main_list:")
 pprint.pprint(dic_main_list)
@@ -191,6 +194,3 @@ pprint.pprint(dic_if_list)
 print()
 print("Result Dictionary (Main):")
 pprint.pprint(result_dict_main)
-print()
-print("Result Dictionary (If):")
-pprint.pprint(result_dict_if)
