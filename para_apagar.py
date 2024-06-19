@@ -10,6 +10,8 @@ def process_conditions(conditions):
                 subject = value
             elif key == 'Object':
                 obj = value
+                if obj in ["characters", "character", "extent", "distance", "span", "duration", "measurement", "magnitude", "scope", "stretch", "interval", "breadth", "height", "depth", "propongation", "reach", "range"]:  # If Object is not None
+                    subject = f"LEN({subject})"
             elif key == 'Preposision':
                 table_name = value
             elif key == 'NUM':
@@ -105,7 +107,7 @@ def build_sql_query(dic_main, dic_if):
 #TTabelaRegistos must have no more than 2 TTabelaSubRegistos and Camp is equal to 2 and Lamp is less than 4 and TTable is equal to 50
 #The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20
 #The CampoTextoA of TTabelaRegistos must not exceed 200 characters.
-phrase = "Each TTabelaRegistos must have no more than 2 TTabelaSubRegistos if CampoInteiroA of TTabelaRegistos is bigger than 10."
+phrase = "The CampoInteiroA of TTabelaRegistos must be a value between 10 and 20"
 
 docs, dic_main_CLOUSE, dic_if_CLOUSE, text = main.main(phrase)
 
